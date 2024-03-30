@@ -1,0 +1,50 @@
+name: Weekly update
+
+on:
+  schedule:
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout crawler
+        uses: actions/checkout@v2
+        with:
+          repository: 'OpenShamela/shamela_crawler'
+          path: 'crawler'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+      - name: Install Poetry
+        uses: abatilo/actions-poetry@v3
+        with:
+          poetry-version: 1.8.2
+      - name: Setup a local virtual environment
+        run: |
+          poetry config virtualenvs.create true --local
+          poetry config virtualenvs.in-project true --local
+      - name: Caching
+        uses: actions/cache@v4
+        with:
+          path: ./.venv
+          key: venv-${{ hashFiles('poetry.lock') }}
+      - name: Install requirements
+        run: cd crawler && poetry install
+      - name: Crawl
+        run: |
+          cd crawler
+          poetry run scrapy crawl categories -o ../categories.json -s LOG_LEVEL=INFO
+          poetry run scrapy crawl authors -o ../authors.json -s LOG_LEVEL=INFO
+          poetry run scrapy crawl books -o ../books.json -s LOG_LEVEL=INFO
+
+      - name: Commit JSON files
+        run: |
+          git config --global user.name 'GitHub Action Bot'
+          git config --global user.email 'action@github.com'
+          git add *.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update data $(date +'%Y%m%d-%H%M%S')"
+          git push
+  
