@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Checkout crawler
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: 'OpenShamela/shamela_crawler'
           path: 'crawler'
