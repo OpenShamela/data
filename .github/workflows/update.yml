@@ -35,6 +35,7 @@ jobs:
         run: cd crawler && poetry install
       - name: Crawl
         run: |
+          rm *.json
           cd crawler
           poetry run scrapy crawl categories -o ../categories.json -s LOG_LEVEL=INFO
           poetry run scrapy crawl authors -o ../authors.json -s LOG_LEVEL=INFO
